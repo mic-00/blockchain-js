@@ -1,13 +1,13 @@
-const Blockchain = require("../Blockchain");
-const sha256 = require("sha256");
+const Blockchain = require('../Blockchain');
+const sha256 = require('sha256');
 
 describe('Unit tests', () => {
 
-  const blockChain = new Blockchain;
+  const blockchain = new Blockchain;
 
   test('Creates a new block', () => {
-    const chain = [...blockChain.chain];
-    const newBlock = blockChain.createNewBlock(
+    const chain = [...blockchain.chain];
+    const newBlock = blockchain.createNewBlock(
         123123,
         'OINA90SDNF90N',
         '90ANSD9F0N9009N'
@@ -17,34 +17,34 @@ describe('Unit tests', () => {
     expect(newBlock.nonce).toBe(123123);
     expect(newBlock.previousBlockHash).toBe('OINA90SDNF90N');
     expect(newBlock.hash).toBe('90ANSD9F0N9009N');
-    expect(blockChain.chain).toEqual([...chain, newBlock]);
-    expect(blockChain.pendingTransactions).toHaveLength(0);
+    expect(blockchain.chain).toEqual([...chain, newBlock]);
+    expect(blockchain.pendingTransactions).toHaveLength(0);
   });
 
   test('Gets last block', () => {
-    const lastBlock = blockChain.createNewBlock(
+    const lastBlock = blockchain.createNewBlock(
         123123,
         'OIANSDF0AN09',
         'NJNASDNF09ASDF'
     );
-    expect(blockChain.getLastBlock()).toBe(lastBlock);
+    expect(blockchain.getLastBlock()).toBe(lastBlock);
   });
 
   test('Creates a new transaction', () => {
-    const length = blockChain.pendingTransactions.length;
-    const transaction = blockChain.createNewTransaction(
+    const length = blockchain.pendingTransactions.length;
+    const transaction = blockchain.createNewTransaction(
         80,
         'OIANSDF0AN09',
         'NJNASDNF09ASDF'
     );
-    const newLength = blockChain.pendingTransactions.length;
+    const newLength = blockchain.pendingTransactions.length;
     expect(newLength).toBe(length + 1);
     expect(transaction).toBe(3);
   });
 
   test('Hashes block', () => {
-    const block = blockChain.getLastBlock();
-    const hash = blockChain.hashBlock(
+    const block = blockchain.getLastBlock();
+    const hash = blockchain.hashBlock(
         'OIANSDF0AN09',
         block,
         123
@@ -53,10 +53,9 @@ describe('Unit tests', () => {
   });
 
   test('Proof of work', () => {
-    const block = blockChain.getLastBlock();
-    const nonce = blockChain.proofOfWork('OIANSDF0AN09', block);
+    const block = blockchain.getLastBlock();
+    const nonce = blockchain.proofOfWork('OIANSDF0AN09', block);
     expect(sha256('OIANSDF0AN09' + nonce.toString() + JSON.stringify(block))).toMatch(new RegExp('^0000?'));
-
   })
 
 });

@@ -34,13 +34,15 @@ function NetworkNode() {
     const lastBlock = this.blockchain.getLastBlock();
     const correctHash = lastBlock.hash === newBlock.previousBlockHash;
     const correctIndex = lastBlock.index + 1 === newBlock.index;
+    console.log(lastBlock.index, newBlock.index);
+    console.log(correctHash, correctIndex);
     if (correctHash && correctIndex) {
-      const chain = this.blockchain.createNewBlock(
+      const index = this.blockchain.createNewBlock(
           newBlock.nonce,
           newBlock.previousBlockHash,
           newBlock.hash
       );
-      res.json(chain);
+      res.json(index);
     }
   });
 
@@ -57,7 +59,7 @@ function NetworkNode() {
             req.body
         )
     );
-    promises.all();
+    Promise.all(promises);
     res.json(transactions);
   });
 
@@ -71,17 +73,27 @@ function NetworkNode() {
     };
     const nonce = this.blockchain.proofOfWork(previousBlockHash, currentBlockData);
     const hash = this.blockchain.hashBlock(previousBlockHash, currentBlockData, nonce);
-    /// Reward
-    this.blockchain.createNewTransaction(12.5, '', this.address);
-    const chain = this.blockchain.createNewBlock(nonce, previousBlockHash, hash);
+    const index = this.blockchain.createNewBlock(nonce, previousBlockHash, hash);
     const promises = this.blockchain.networkNodes.map((n) => {
       axios.post(
           `http://localhost:${n}/receive-new-block`,
-          { nonce, previousBlockHash, hash }
+          { nonce, previousBlockHash, hash, index }
       );
     });
-    promises.all();
-    res.json(chain);
+    Promise
+        .all(promises)
+        .then(() => {
+          axios
+              .post(
+                  `http://localhost:${this.blockchain.node}/transaction/broadcast`,
+                  {
+                    amount: 12.5,
+                    sender: "",
+                    recipient: this.address
+                  }
+              );
+        });
+    res.json(index);
   });
 
   this.app.post('/register-and-broadcast-node', (req, res) => {
@@ -139,8 +151,8 @@ function NetworkNode() {
     const promises = this.blockchain.networkNodes.map((n) =>
       axios.get(`http://localhost:${n}/blockchain`)
     );
-    promises
-        .all()
+    Promise
+        .all(promises)
         .then((blockchains) => {
           let maxChainLength = this.blockchain.chain.length;
           let newLongestChain = null;
@@ -210,7 +222,7 @@ NetworkNode.prototype.deleteNodesUnavailable = function () {
                 { node }
             );
           });
-          promises.all();
+          Promise.all(promises);
         });
   });
 }

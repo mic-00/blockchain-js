@@ -134,6 +134,47 @@ function NetworkNode() {
     const nodes = this.blockchain.deleteNode(node);
     res.json(nodes);
   });
+
+  this.app.get('/consensus', (req, res) => {
+    const promises = this.blockchain.networkNodes.map((n) =>
+      axios.get(`http://localhost:${n}/blockchain`)
+    );
+    promises
+        .all()
+        .then((blockchains) => {
+          let maxChainLength = this.blockchain.chain.length;
+          let newLongestChain = null;
+          let newPendingTransactions = null;
+          blockchains.forEach((blockchain) => {
+            if (blockchain.chain.length > maxChainLength) {
+              maxChainLength = blockchain.chain.length;
+              newLongestChain = blockchain.chain;
+              newPendingTransactions = blockchain.pendingTransactions;
+            }
+          });
+          if (!newLongestChain || (newLongestChain && !this.blockchain.isChainValid(newLongestChain))) {
+            res.json(this.blockchain.chain);
+          } else {
+            this.blockchain.chain = newLongestChain;
+            this.blockchain.pendingTransactions = newPendingTransactions;
+            res.json(this.blockchain.chain);
+          }
+        });
+  });
+
+  this.app.get('/block/:blockHash', (req, res) => {
+    const blockHash = req.params.blockHash;
+    const block = this.blockchain.getBlock(blockHash);
+    res.json(block);
+  });
+
+  this.app.get('/transaction/:transactionId', (req, res) => {
+
+  });
+
+  this.app.get('/address/:address', (req, res) => {
+
+  });
 }
 
 /**

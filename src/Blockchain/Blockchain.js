@@ -1,4 +1,5 @@
 const sha256 = require("sha256");
+const { v4: uuidv4 } = require('uuid');
 
 function Blockchain() {
   this.node = undefined;
@@ -51,7 +52,8 @@ Blockchain.prototype.createNewTransaction = function (amount, sender, recipient)
   const transaction = {
     amount,
     sender,
-    recipient
+    recipient,
+    transactionId: uuidv4().split('-').join('')
   };
   this.pendingTransactions.push(transaction);
 
@@ -124,6 +126,48 @@ Blockchain.prototype.deleteNode = function (node) {
     this.networkNodes.splice(index, 1);
     return this.networkNodes;
   }
+  return null;
+}
+
+Blockchain.prototype.isChainValid = function (blockchain) {
+  for (let i = 1; i < blockchain.length; ++i) {
+    const currentBlock = blockchain[i];
+    const prevBlock = blockchain[i - 1];
+    const blockHash = this.hashBlock(
+        prevBlock.hash,
+        {
+          transactions: currentBlock.transactions,
+          index: currentBlock.index,
+          nonce: currentBlock.nonce
+        },
+        currentBlock.nonce
+    );
+    if (
+        currentBlock.previousBlockHash !== prevBlock.hash
+        || !blockHash.startsWith('0000')
+    )
+      return false;
+  }
+  const genesisBlock = blockchain[0];
+  return (
+      genesisBlock.nonce === 0
+      && genesisBlock.previousBlockHash === ''
+      && genesisBlock.hash === 'OINA90SDNF90N'
+      && genesisBlock.transactions.length === 0
+  );
+}
+
+Blockchain.prototype.getBlock = function (blockHash) {
+  return this.chain.find((block) => block.hash === blockHash);
+};
+
+Blockchain.prototype.getTransaction = function (transactionId) {
+  this.chain.forEach((block) => {
+    const element = block.transactions
+        .find((transaction) => transaction.transactionId === transactionId);
+    if (element)
+      return element;
+  });
   return null;
 }
 

@@ -10,6 +10,7 @@ function Blockchain() {
 
 /**
  * Creates a new block with pending transactions in the blockchain.
+ *
  * @param {number} nonce
  * @param {string} previousBlockHash
  * @param {string} hash
@@ -27,11 +28,12 @@ Blockchain.prototype.createNewBlock = function (nonce, previousBlockHash, hash) 
   this.pendingTransactions = [];
   this.chain.push(newBlock);
 
-  return newBlock;
+  return this.chain;
 }
 
 /**
  * Gets the chain's last block.
+ *
  * @returns {object}
  */
 Blockchain.prototype.getLastBlock = function () {
@@ -53,11 +55,12 @@ Blockchain.prototype.createNewTransaction = function (amount, sender, recipient)
   };
   this.pendingTransactions.push(transaction);
 
-  return this.getLastBlock()['index'];
+  return this.pendingTransactions;
 }
 
 /**
  * Generates a fingerprint of the given input using SHA-256 algorithm.
+ *
  * @param {string} previousBlockHash
  * @param {object} currentBlockData
  * @param {number} nonce
@@ -77,19 +80,51 @@ Blockchain.prototype.proofOfWork = function (previousBlockHash, currentBlockData
   let nonce = 0;
   while (!this
       .hashBlock(previousBlockHash, currentBlockData, nonce)
-      .startsWith('0000'))
+      .startsWith('0000')
+  )
     nonce++;
 
   return nonce;
 }
 
+/**
+ * Sets the local node.
+ *
+ * @param node
+ */
 Blockchain.prototype.setNode = function (node) {
   this.node = node;
+  return node;
 }
 
+/**
+ * Memorizes a new remote node.
+ *
+ * @param node
+ */
 Blockchain.prototype.addNode = function (node) {
-  if (!this.networkNodes.find(e => e === node))
+  if (
+      !this.networkNodes.find(e => e === node)
+      && node !== this.node
+  ) {
     this.networkNodes.push(node);
+    return this.networkNodes;
+  }
+  return null;
+}
+
+/**
+ * Deletes a remote node.
+ *
+ * @param node
+ */
+Blockchain.prototype.deleteNode = function (node) {
+  const index = this.networkNodes.findIndex((n) => n === node);
+  if (index !== -1) {
+    this.networkNodes.splice(index, 1);
+    return this.networkNodes;
+  }
+  return null;
 }
 
 module.exports = Blockchain;

@@ -2,10 +2,10 @@
   "name": "blockchain",
   "version": "1.0.0",
   "description": "",
-  "main": "src/api/api.js",
+  "main": "src/NetworkNode/NetworkNode.js",
   "scripts": {
     "test": "jest",
-    "start": "nodemon --watch src -e js src/api/api.js"
+    "start": "nodemon --watch src -e js src/index.js"
   },
   "repository": {
     "type": "git",
